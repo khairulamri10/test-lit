@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Extracted Applicant Details</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color:#f8f9fa; padding:20px }
+    h1 { text-align:center }
+    table { width:100%; border-collapse:collapse; background:#fff; box-shadow:0 0 5px rgba(0,0,0,0.1) }
+    th, td { border:1px solid #dee2e6; padding:10px; text-align:left }
+    th { background:#e9ecef }
+    tr:nth-child(even) { background:#f2f2f2 }
+    .btn-container { text-align:center; margin-top:20px }
+    button { background:#007bff; color:#fff; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; font-size:16px; margin:5px }
+    button:hover { background:#0056b3 }
+  </style>
+</head>
+<body>
+  <h1>Extracted Applicant Details</h1>
+
+  <!-- Main applicants -->
+  <table id="data-table">
+    <thead>
+      <tr>
+        <th>Case ID</th>
+        <th>Citizenship</th>
+        <th>Contact Number</th>
+        <th>Address</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ID-0001</td>
+        <td>Singaporean</td>
+        <td>+65 9123 4567</td>
+        <td>123 Orchard Road, Singapore</td>
+        <td>
+            <select>
+            <option>Pending</option>
+            <option>Approve</option>
+            <option>Decline</option>
+            </select>
+        </td>
+      </tr>
+      <tr>
+        <td>ID-0002</td>
+        <td>Singaporean</td>
+        <td>+65 9123 4567</td>
+        <td>123 Orchard Road, Singapore</td>
+        <td>
+            <select>
+            <option>Pending</option>
+            <option>Approve</option>
+            <option>Decline</option>
+            </select>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="btn-container">
+    <button onclick="downloadCSV()">Extract as CSV File</button>
+    <button onclick="proceed()">Proceed</button>
+    <button onclick="goBack()">Back</button>
+  </div>
+
+<script>
+  // Add IDs automatically
+  function populateUserIDs() {
+    const rows = document.querySelectorAll("#data-table tbody tr");
+    rows.forEach((row, index) => {
+      const cell = row.cells[0];
+      if (!cell.innerText.trim()) {
+        cell.innerText = "USER-" + String(index + 1).padStart(4, '0');
+      }
+    });
+  }
+  window.addEventListener('DOMContentLoaded', populateUserIDs);
+
+  // Example: additional data arrays
+  const extraData = {
+    "ID-0001": {
+      occupations: [
+        {type:"Full Time", gross:3000, period:"Jan to Jun"},
+        {type:"Part Time", gross:1200, period:"Jul to Sep"}
+      ],
+      household: [
+        {name:"Jane Doe", relationship:"Spouse", occupation:"Teacher", gross:4000},
+        {name:"John Doe", relationship:"Son", occupation:"Student", gross:0}
+      ]
+    },
+    "ID-0002": {
+      occupations: [
+        {type:"Full Time", gross:2500, period:"Feb–Aug"}
+      ],
+      household: [
+        {name:"Anna Tan", relationship:"Wife", occupation:"Nurse", gross:3200}
+      ]
+    }
+  };
+
+  // Generate CSV with sub-records
+  function generateCSVData() {
+    const lines = [];
+
+    // Occupations section header
+    lines.push("CaseID,OccupationType,GrossMonthly,Period");
+    Object.keys(extraData).forEach(caseId => {
+      lines.push(caseId);
+      extraData[caseId].occupations.forEach(o=>{
+        lines.push([
+          '',
+          escapeCell(o.type),
+          escapeCell(o.gross),
+          escapeCell(o.period)
+        ].join(','));
+      });
+      lines.push('');
+    });
+
+    // Household section header
+    lines.push("CaseID,HouseholdName,HouseholdRelationship,HouseholdOccupation,HouseholdGross");
+    Object.keys(extraData).forEach(caseId => {
+      lines.push(caseId);
+      extraData[caseId].household.forEach(h=>{
+        lines.push([
+          '',
+          //escapeCell(h.name),
+          escapeCell(h.relationship),
+          escapeCell(h.occupation),
+          escapeCell(h.gross)
+        ].join(','));
+      });
+      lines.push('');
+    });
+
+    lines.push('');
+    return lines.join('\n');
+  }
+
+  function escapeCell(text) {
+    text = text == null ? '' : String(text);
+    text = text.replace(/\"/g,'\"\"');
+    if (text.includes(',') || text.includes('\"') || text.includes('\n')) {
+      return `\"${text}\"`;
+    }
+    return text;
+  }
+
+  function downloadCSV() {
+    const csv = generateCSVData();
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const now = new Date();
+    const filename = `applicant-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}.csv`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  function proceed() {
+    alert("Successfully submitted!"); // simple browser popup
+  }
+
+   function goBack() {
+    window.location.href = 'index.html'; // navigate back to index.html
+  }
+</script>
+</body>
+</html>

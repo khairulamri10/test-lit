@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Case {{ case.case_id if case else '' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+      body { font-family: system-ui, Arial; margin: 24px; }
+      .topbar { display:flex; align-items:center; justify-content:space-between; margin: 8px 0 16px; }
+      .btn { background:#0069d9; color:#fff; border:none; padding:8px 14px; border-radius:8px; cursor:pointer; text-decoration:none; }
+      .btn:hover { background:#0053ad; }
+      .card { background:#fff; border:1px solid #ddd; border-radius:12px; padding:16px; box-shadow:0 1px 8px rgba(0,0,0,0.06); margin-bottom:16px; }
+      table { width:100%; border-collapse: collapse; }
+      th, td { border: 1px solid #eee; padding: 8px; text-align:left; }
+      th { background:#f7f7f7; }
+      .muted { color:#666; }
+      .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef; color:#224; font-size:12px; }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <h1 style="margin:0">Case {{ case.case_id if case else '' }}</h1>
+      <div>
+        <a class="btn" href="/">Home</a>
+        <a class="btn" href="/cases/view">All Cases</a>
+      </div>
+    </div>
+
+    {% if error %}
+      <div class="card">
+        <p class="muted">{{ error }}</p>
+      </div>
+    {% else %}
+      <div class="card">
+        <p>
+          <strong>Filename:</strong> {{ case.filename }}
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          <strong>Created:</strong> {{ case.created_at }}
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          <strong>Confidence:</strong> <span class="pill">{{ case.extracted.confidence }}%</span>
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          {% set decision = case.decision or 'Pending' %}
+          <strong>Decision:</strong>
+          {% if decision == 'Approved' %}
+            <span class="badge badge-green">Approved</span>
+          {% elif decision == 'Declined' %}
+            <span class="badge badge-red">Declined</span>
+          {% else %}
+            <span class="badge badge-amber">Pending</span>
+          {% endif %}
+          {% if case.decision_at %}
+            ({{ case.decision_at }})
+          {% endif %}
+        </p>
+        <div>
+          {% if role == 'manager' %}
+            <button class="btn" onclick="setDecision('{{ case.case_id }}','approved')">Approve</button>
+            <button class="btn" style="margin-left:8px;background:#dc3545" onclick="setDecision('{{ case.case_id }}','declined')">Decline</button>
+          {% endif %}
+          <button class="btn" style="margin-left:8px" onclick="toggleRawText()">Toggle Raw Text</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">Fields</h3>
+        <table>
+          <tr><th>Field</th><th>Value</th><th>Valid</th></tr>
+          {% for name, cell in case.extracted.fields.items() %}
+          <tr>
+            <td>{{ name }}</td>
+            <td>{{ cell.value }}</td>
+            <td>{{ 'Yes' if cell.valid else 'No' }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">Flags</h3>
+        {% if case.extracted.flags %}
+          <ul>
+            {% for f in case.extracted.flags %}
+              <li>{{ f }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted">None</p>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">Missing Required</h3>
+        {% if case.extracted.missing_required %}
+          <ul>
+            {% for m in case.extracted.missing_required %}
+              <li>{{ m }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted">None</p>
+        {% endif %}
+      </div>
+
+      <div class="card" id="raw-text-card" style="display:none">
+        <h3 style="margin-top:0">Raw Text</h3>
+        <pre style="white-space: pre-wrap; word-break: break-word;">{{ case.extracted.raw_text }}</pre>
+      </div>
+
+      <div id="toast" style="position:fixed; right:16px; bottom:16px; background:#222; color:#fff; padding:10px 14px; border-radius:8px; opacity:0; transition:opacity .2s"></div>
+    {% endif %}
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+  </body>
+  </html>

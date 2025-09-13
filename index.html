@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Content Reports</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+      body { font-family: system-ui, Arial; margin: 0; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #ddd; padding: 8px; }
+      .topbar { position: sticky; top:0; z-index: 5; display:flex; align-items:center; justify-content:space-between; margin: 0; padding: 12px 16px; background:#fff; border-bottom:1px solid #eee; }
+      .btn { background:#0d6efd; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; text-decoration:none; font-size:14px; line-height:1; display:inline-flex; align-items:center; }
+      .btn:hover { background:#0b5ed7; }
+      .card { background:#fff; border:1px solid #ddd; border-radius:12px; padding:16px; box-shadow:0 1px 8px rgba(0,0,0,0.06); margin:16px; }
+      .muted { color:#666; font-size:0.92rem; }
+      #ocr-output table { width:100%; border-collapse:collapse; }
+      #ocr-output th, #ocr-output td { border:1px solid #eee; padding:8px; text-align:left; }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <h1 style="margin:0">Content Reports</h1>
+      <div style="display:flex; gap:8px; align-items:center;">
+        {% if role == 'officer' %}
+          <a class="btn" href="#" onclick="openProcessedModal(); return false;">Upload Processed Cases</a>
+          <a class="btn" href="/summary">Summary</a>
+        {% endif %}
+        <a class="btn" href="/cases/view">Cases</a>
+        {% if role %}
+          <span class="badge {% if role=='manager' %}badge-green{% else %}badge-amber{% endif %}">Role: {{ role|title }}</span>
+          <a class="btn" href="/logout">Logout</a>
+        {% else %}
+          <a class="btn" href="/login">Login</a>
+        {% endif %}
+      </div>
+    </div>
+  <div class="container-narrow">
+  {% if role == 'officer' %}
+  <div class="card">
+    <h2>Manual Entry (Officer)</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input id="m-full-name" class="form-control" type="text" placeholder="Jane Doe">
+      </div>
+      <div class="form-group">
+        <label>NRIC</label>
+        <input id="m-nric" class="form-control" type="text" placeholder="S1234567A">
+      </div>
+      <div class="form-group">
+        <label>Citizenship</label>
+        <input id="m-citizenship" class="form-control" type="text" placeholder="Singaporean">
+      </div>
+      <div class="form-group">
+        <label>Charge Type</label>
+        <input id="m-charge" class="form-control" type="text" placeholder="Theft">
+      </div>
+      <div class="form-group">
+        <label>Contact Number</label>
+        <input id="m-contact" class="form-control" type="text" placeholder="+65 91234567">
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input id="m-address" class="form-control" type="text" placeholder="123 Example St">
+      </div>
+    </div>
+    <div style="height:12px"></div>
+    <button class="btn" onclick="createManualCase()">Create Case</button>
+    <div style="height:10px"></div>
+    <div id="manual-output" class="hint">Fill the fields and click Create Case.</div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>OCR Upload</h2>
+    <input type="file" id="ocr-file" accept=".jpg,.jpeg,.png,.tiff,.tif,.bmp,.gif,.pdf,.txt" multiple>
+    <div style="margin-top:8px">
+      <label><input type="checkbox" id="ocr-handwriting"> Handwriting OCR (EasyOCR)</label>
+    </div>
+    <div style="height:8px"></div>
+    <button class="btn" onclick="uploadOCR()">Upload & Extract</button>
+    <div style="height:12px"></div>
+    <div id="ocr-output" class="muted">No file uploaded yet.</div>
+  </div>
+  </div>
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+    
+    <!-- Processed Cases Upload Modal -->
+    <div id="processed-modal" class="modal hidden" onclick="modalBackdropClick(event)">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 style="margin:0">Upload Processed Cases</h3>
+          <button class="btn" onclick="closeProcessedModal()">Close</button>
+        </div>
+        <p class="muted">Upload a CSV with headers: <code>case_id,status</code> (status: approved or declined).</p>
+        <input type="file" id="processed-file" accept=".csv">
+        <div style="height:8px"></div>
+        <button class="btn" onclick="uploadProcessedCases()">Upload</button>
+        <div id="processed-status" class="muted" style="margin-top:10px">Waiting for file...</div>
+        <div id="processed-results" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </body>
+</html>

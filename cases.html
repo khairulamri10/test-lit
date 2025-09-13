@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cases</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+      body { font-family: system-ui, Arial; margin: 24px; }
+      .topbar { display:flex; align-items:center; justify-content:space-between; margin: 8px 0 16px; }
+      .btn { background:#0069d9; color:#fff; border:none; padding:8px 14px; border-radius:8px; cursor:pointer; text-decoration:none; }
+      .btn:hover { background:#0053ad; }
+      table { width:100%; border-collapse: collapse; }
+      th, td { border: 1px solid #eee; padding: 8px; text-align:left; }
+      th { background:#f7f7f7; }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <h1 style="margin:0">Extracted Cases</h1>
+      <div>
+        <a class="btn" href="/export/csv" title="Download CSV">Export CSV</a>
+        <a class="btn" href="/">Home</a>
+      </div>
+    </div>
+    <div style="margin: 0 0 12px 0">
+      <label style="user-select:none"><input type="checkbox" id="filter-needs-review" onchange="filterNeedsReview()"> Needs Review only</label>
+    </div>
+    <table id="cases-table">
+      <tr><th>Case ID</th><th>Filename</th><th>Created</th><th>Confidence</th><th>Flags</th><th>Decision</th><th>Open</th></tr>
+      {% for c in cases %}
+      {% set conf = c.extracted.confidence %}
+      {% set flags = (c.extracted.flags | default([])) %}
+      {% set needs = (conf < 70) or (flags|length > 0) %}
+      <tr data-confidence="{{ conf }}" data-flags="{{ flags|length }}" data-needs-review="{{ '1' if needs else '0' }}">
+        <td>{{ c.case_id }}</td>
+        <td>{{ c.filename }}</td>
+        <td>{{ c.created_at }}</td>
+        <td>
+          {% if conf >= 80 %}
+            <span class="badge badge-green">{{ conf }}%</span>
+          {% elif conf >= 50 %}
+            <span class="badge badge-amber">{{ conf }}%</span>
+          {% else %}
+            <span class="badge badge-red">{{ conf }}%</span>
+          {% endif %}
+        </td>
+        <td>{{ flags|length }}</td>
+        <td>
+          {% set decision = c.decision or 'Pending' %}
+          {% if decision == 'Approved' %}
+            <span class="badge badge-green">Approved</span>
+          {% elif decision == 'Declined' %}
+            <span class="badge badge-red">Declined</span>
+          {% else %}
+            <span class="badge badge-amber">Pending</span>
+          {% endif %}
+        </td>
+        <td><a class="btn" href="/case/{{ c.case_id }}">View</a></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </body>
+  </html>

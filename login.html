@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+      body { font-family: system-ui, Arial; margin: 0; }
+      .login-card { max-width: 420px; margin: 80px auto; background:#fff; border:1px solid #ddd; border-radius:12px; padding:20px; box-shadow:0 1px 8px rgba(0,0,0,0.06); }
+      .row { margin: 10px 0; }
+      input[type=text], input[type=password] { width: 100%; padding: 10px; border:1px solid #ddd; border-radius:6px; }
+      label { display:block; margin-bottom:6px; font-weight:600; }
+    </style>
+  </head>
+  <body>
+    <div class="login-card">
+      <h2 style="margin-top:0">Login</h2>
+      {% if error %}
+        <p style="color:#b02a37">{{ error }}</p>
+      {% endif %}
+      <form method="post" action="{{ url_for('login') }}">
+        {% if request.args.get('next') %}
+          <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+        {% endif %}
+        <div class="row">
+          <label>Role</label>
+          <label style="font-weight:normal"><input type="radio" name="role" value="officer" checked> Officer</label>
+          <label style="font-weight:normal"><input type="radio" name="role" value="manager"> Manager</label>
+        </div>
+        <div class="row">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Enter demo password" required>
+        </div>
+        <div class="row">
+          <button class="btn" type="submit">Sign in</button>
+          <a class="btn" href="/">Cancel</a>
+        </div>
+        <p class="muted">Demo passwords (can set via env): Officer: <code>{{ officer_pw }}</code> · Manager: <code>{{ manager_pw }}</code></p>
+      </form>
+    </div>
+  </body>
+  </html>
+
